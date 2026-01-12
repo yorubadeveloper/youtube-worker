@@ -163,9 +163,24 @@ async function fetchTranscript(videoUrl) {
 
     // If proxy is enabled, add custom fetch functions that use the proxy
     if (USE_PROXY && proxyAgent) {
-      const customFetch = (url, opts = {}) => {
+      const customFetch = (input, init = {}) => {
+        // Handle both URL strings and Request objects
+        let url = input;
+        let options = init;
+
+        // If input is a Request object, extract URL and options
+        if (typeof input === 'object' && input.url) {
+          url = input.url;
+          options = {
+            method: input.method,
+            headers: input.headers,
+            body: input.body,
+            ...init
+          };
+        }
+
         return undiciFetch(url, {
-          ...opts,
+          ...options,
           dispatcher: proxyAgent
         });
       };

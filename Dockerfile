@@ -4,11 +4,14 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
+# Add cache-busting build arg
+ARG CACHEBUST=1
+
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --production
+# Install dependencies (use ci for clean install from lockfile)
+RUN npm ci --omit=dev
 
 # Copy application files
 COPY server.js ./
