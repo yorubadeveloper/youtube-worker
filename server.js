@@ -2,7 +2,8 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import NodeCache from 'node-cache';
 import { fetchTranscript as getYoutubeTranscript } from 'youtube-transcript-plus';
-import { HttpsProxyAgent } from 'https-proxy-agent';
+import { ProxyAgent } from 'undici';
+import { fetch as undiciFetch } from 'undici';
 import cors from 'cors';
 
 const app = express();
@@ -14,7 +15,7 @@ const USE_PROXY = process.env.USE_PROXY === 'true' && PROXY_URL;
 let proxyAgent = null;
 
 if (USE_PROXY) {
-  proxyAgent = new HttpsProxyAgent(PROXY_URL);
+  proxyAgent = new ProxyAgent(PROXY_URL);
   console.log(`Proxy enabled: ${PROXY_URL.replace(/\/\/.*@/, '//***@')}`); // Hide credentials in logs
 } else {
   console.log('Proxy disabled - using direct connection');
@@ -163,9 +164,9 @@ async function fetchTranscript(videoUrl) {
     // If proxy is enabled, add custom fetch functions that use the proxy
     if (USE_PROXY && proxyAgent) {
       const customFetch = (url, opts = {}) => {
-        return fetch(url, {
+        return undiciFetch(url, {
           ...opts,
-          agent: proxyAgent
+          dispatcher: proxyAgent
         });
       };
 
